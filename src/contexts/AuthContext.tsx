@@ -1,183 +1,63 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, supabase } from '@/lib/supabase';
-import { Session } from '@supabase/supabase-js';
+import { authService } from '../services/authService';
+import type { LoginCredentials, SignupCredentials, AuthResponse } from '../services/authService';
 import { Loader2 } from 'lucide-react';
 
-type AuthContextType = {
-  session: Session | null;
-  user: User | null;
+interface AuthContextType {
+  user: any | null;
+  isAuthenticated: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  signup: (credentials: SignupCredentials) => Promise<void>;
+  logout: () => void;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{
-    error: Error | null;
-    data: Session | null;
-  }>;
-  signUp: (email: string, password: string) => Promise<{
-    error: Error | null;
-    data: Session | null;
-  }>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{
-    error: Error | null;
-    data: boolean | null;
-  }>;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        
-        if (data.session?.user) {
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', data.session.user.id)
-            .single();
-            
-          if (error) {
-            console.error('Error fetching user data:', error);
-          } else {
-            setUser(userData);
-          }
-        }
-      } catch (error) {
-        console.error('Error getting session:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getInitialSession();
-
-    // Set up auth subscription
-    const { data } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      setSession(newSession);
-      setLoading(true);
-
-      if (event === 'SIGNED_IN' && newSession?.user) {
-        const { data: userData, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', newSession.user.id)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching user data:', error);
-        } else {
-          setUser(userData);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-
-      setLoading(false);
-    });
-
-    // Cleanup subscription
-    return () => {
-      data?.subscription.unsubscribe();
-    };
+    // Check if user is logged in on mount
+    const user = authService.getUser();
+    if (user) {
+      setUser(user);
+    }
+    setLoading(false);
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (!error && data?.user) {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-          
-        if (userError) {
-          console.error('Error fetching user data:', userError);
-        } else {
-          setUser(userData);
-        }
-      }
-
-      return { data: data.session, error };
+      const response = await authService.login(credentials);
+      setUser(response.user);
     } catch (error) {
-      console.error('Error signing in:', error);
-      return { data: null, error: error as Error };
+      throw error;
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signup = async (credentials: SignupCredentials) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      // Create user record in users table after signup
-      if (data.user) {
-        const { error: userError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email: data.user.email,
-              role: 'user',
-            },
-          ]);
-          
-        if (userError) {
-          console.error('Error creating user record:', userError);
-        }
-      }
-
-      return { data: data.session, error };
+      const response = await authService.signup(credentials);
+      setUser(response.user);
     } catch (error) {
-      console.error('Error signing up:', error);
-      return { data: null, error: error as Error };
+      throw error;
     }
   };
 
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      return { data, error };
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      return { data: null, error: error as Error };
-    }
+  const logout = () => {
+    authService.logout();
+    setUser(null);
   };
 
   const value = {
-    session,
     user,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    resetPassword,
+    isAuthenticated: !!user,
+    login,
+    signup,
+    logout,
+    loading
   };
 
   return (

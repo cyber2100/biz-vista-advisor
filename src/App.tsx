@@ -1,40 +1,77 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout";
-import LandingPage from "./pages/LandingPage";
-import DashboardPage from "./pages/DashboardPage";
-import BusinessRegistrationPage from "./pages/BusinessRegistrationPage";
-import CurrencyExchangePage from "./pages/CurrencyExchangePage";
-import BusinessAnalyticsPage from "./pages/BusinessAnalyticsPage";
-import BusinessAdvicePage from "./pages/BusinessAdvicePage";
-import NotFound from "./pages/NotFound";
+import { Toaster } from "./components/ui/toaster";
+import { Toaster as Sonner } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { AuthProvider } from './contexts/AuthContext';
+import { Routes, Route } from 'react-router-dom';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
+import Layout from './components/Layout';
+import DashboardPage from './pages/DashboardPage';
+import BusinessRegistrationPage from './pages/BusinessRegistrationPage';
+import CurrencyExchangePage from './pages/CurrencyExchangePage';
+import BusinessAnalyticsPage from './pages/BusinessAnalyticsPage';
+import BusinessAdvicePage from './pages/BusinessAdvicePage';
+import LandingPage from './pages/LandingPage';
+import NotFound from './pages/NotFound';
+import './App.css';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<Layout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="register" element={<BusinessRegistrationPage />} />
-            <Route path="currency" element={<CurrencyExchangePage />} />
-            <Route path="analytics" element={<BusinessAnalyticsPage />} />
-            <Route path="advice" element={<BusinessAdvicePage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+
+              {/* Protected routes */}
+              <Route path="/app" element={<Layout />}>
+                <Route index element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="register" element={
+                  <ProtectedRoute>
+                    <BusinessRegistrationPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="currency" element={
+                  <ProtectedRoute>
+                    <CurrencyExchangePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="analytics" element={
+                  <ProtectedRoute>
+                    <BusinessAnalyticsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="advice" element={
+                  <ProtectedRoute>
+                    <BusinessAdvicePage />
+                  </ProtectedRoute>
+                } />
+              </Route>
+
+              {/* Catch all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
