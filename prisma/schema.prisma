@@ -3,19 +3,20 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // User and Authentication
 model User {
-  id            String      @id @default(cuid())
-  email         String      @unique
-  name          String?
-  role          UserRole    @default(USER)
-  businesses    Business[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id         String     @id @default(cuid())
+  email      String     @unique
+  name       String?
+  role       UserRole   @default(USER)
+  businesses Business[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   @@map("users")
 }
@@ -27,19 +28,19 @@ enum UserRole {
 
 // Business Management
 model Business {
-  id              String        @id @default(cuid())
-  name            String
-  type            BusinessType
-  size            BusinessSize
-  registrationNo  String?
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  subscription    Subscription?
-  financials      Financial[]
-  analytics       Analytics[]
-  advice          Advice[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  name           String
+  type           BusinessType
+  size           BusinessSize
+  registrationNo String?
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  subscription   Subscription?
+  financials     Financial[]
+  analytics      Analytics[]
+  advice         Advice[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@map("businesses")
 }
@@ -62,16 +63,16 @@ enum BusinessSize {
 
 // Subscription and Payment
 model Subscription {
-  id                String    @id @default(cuid())
-  businessId        String    @unique
-  business          Business  @relation(fields: [businessId], references: [id])
-  stripeCustomerId  String
-  stripePriceId     String
-  status            SubStatus
-  plan              PlanType
-  currentPeriodEnd  DateTime
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  businessId       String    @unique
+  business         Business  @relation(fields: [businessId], references: [id])
+  stripeCustomerId String
+  stripePriceId    String
+  status           SubStatus
+  plan             PlanType
+  currentPeriodEnd DateTime
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@map("subscriptions")
 }
@@ -93,17 +94,17 @@ enum PlanType {
 
 // Financial Management
 model Financial {
-  id          String          @id @default(cuid())
+  id          String        @id @default(cuid())
   businessId  String
-  business    Business        @relation(fields: [businessId], references: [id])
+  business    Business      @relation(fields: [businessId], references: [id])
   type        FinancialType
   amount      Float
   currency    String
   date        DateTime
   category    String
   description String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   @@map("financials")
 }
@@ -117,14 +118,14 @@ enum FinancialType {
 
 // Business Analytics
 model Analytics {
-  id          String        @id @default(cuid())
-  businessId  String
-  business    Business      @relation(fields: [businessId], references: [id])
-  type        AnalyticsType
-  data        Json
-  period      DateTime
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id         String        @id @default(cuid())
+  businessId String
+  business   Business      @relation(fields: [businessId], references: [id])
+  type       AnalyticsType
+  data       Json
+  period     DateTime
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   @@map("analytics")
 }
@@ -138,15 +139,15 @@ enum AnalyticsType {
 
 // Business Advice
 model Advice {
-  id          String      @id @default(cuid())
-  businessId  String
-  business    Business    @relation(fields: [businessId], references: [id])
-  type        AdviceType
-  content     String
-  status      AdviceStatus
-  metadata    Json?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String       @id @default(cuid())
+  businessId String
+  business   Business     @relation(fields: [businessId], references: [id])
+  type       AdviceType
+  content    String
+  status     AdviceStatus
+  metadata   Json?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
   @@map("advice")
 }
@@ -163,4 +164,4 @@ enum AdviceStatus {
   IMPLEMENTED
   REJECTED
   ARCHIVED
-} 
+}
