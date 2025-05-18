@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User and Authentication
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  name          String?
+  role          UserRole    @default(USER)
+  businesses    Business[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// Business Management
+model Business {
+  id              String        @id @default(cuid())
+  name            String
+  type            BusinessType
+  size            BusinessSize
+  registrationNo  String?
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  subscription    Subscription?
+  financials      Financial[]
+  analytics       Analytics[]
+  advice          Advice[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("businesses")
+}
+
+enum BusinessType {
+  RETAIL
+  ECOMMERCE
+  SERVICE
+  MANUFACTURING
+  TECHNOLOGY
+  OTHER
+}
+
+enum BusinessSize {
+  MICRO
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+// Subscription and Payment
+model Subscription {
+  id                String    @id @default(cuid())
+  businessId        String    @unique
+  business          Business  @relation(fields: [businessId], references: [id])
+  stripeCustomerId  String
+  stripePriceId     String
+  status            SubStatus
+  plan              PlanType
+  currentPeriodEnd  DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("subscriptions")
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  TRIAL
+}
+
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+// Financial Management
+model Financial {
+  id          String          @id @default(cuid())
+  businessId  String
+  business    Business        @relation(fields: [businessId], references: [id])
+  type        FinancialType
+  amount      Float
+  currency    String
+  date        DateTime
+  category    String
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("financials")
+}
+
+enum FinancialType {
+  REVENUE
+  EXPENSE
+  INVESTMENT
+  LOAN
+}
+
+// Business Analytics
+model Analytics {
+  id          String        @id @default(cuid())
+  businessId  String
+  business    Business      @relation(fields: [businessId], references: [id])
+  type        AnalyticsType
+  data        Json
+  period      DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("analytics")
+}
+
+enum AnalyticsType {
+  REVENUE_TREND
+  EXPENSE_TREND
+  GROWTH_METRICS
+  PERFORMANCE_KPI
+}
+
+// Business Advice
+model Advice {
+  id          String      @id @default(cuid())
+  businessId  String
+  business    Business    @relation(fields: [businessId], references: [id])
+  type        AdviceType
+  content     String
+  status      AdviceStatus
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("advice")
+}
+
+enum AdviceType {
+  FINANCIAL
+  OPERATIONAL
+  STRATEGIC
+  RISK
+}
+
+enum AdviceStatus {
+  PENDING
+  IMPLEMENTED
+  REJECTED
+  ARCHIVED
+} 
