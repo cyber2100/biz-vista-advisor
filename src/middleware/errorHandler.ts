@@ -3,13 +3,12 @@ import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
 
 export class AppError extends Error {
-  constructor(
-    public message: string,
-    public statusCode: number = 500,
-    public code?: string
-  ) {
+  statusCode: number;
+
+  constructor(message: string, statusCode: number) {
     super(message);
-    this.name = 'AppError';
+    this.statusCode = statusCode;
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 
@@ -41,7 +40,6 @@ export function errorHandler(
   // Handle known error types
   if (error instanceof AppError) {
     response.error.message = error.message;
-    response.error.code = error.code;
     response.status = error.statusCode;
   } else if (error instanceof ZodError) {
     response.error.message = 'Validation Error';
@@ -90,25 +88,14 @@ export function asyncHandler(fn: (req: Request, res: Response, next: NextFunctio
 }
 
 // Not found handler
-export function notFoundHandler(req: Request, res: Response) {
-  const response: ErrorResponse = {
-    error: {
-      message: `Route ${req.method} ${req.url} not found`,
-      code: 'NOT_FOUND',
-    },
-    status: 404,
-  };
-  res.status(404).json(response);
+export function notFoundHandler(req: Request, res: Response, next: NextFunction) {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 }
 
 // Rate limiting error handler
 export function rateLimitHandler(req: Request, res: Response) {
-  const response: ErrorResponse = {
-    error: {
-      message: 'Too many requests, please try again later',
-      code: 'RATE_LIMIT_EXCEEDED',
-    },
-    status: 429,
-  };
-  res.status(429).json(response);
+  res.status(429).json({
+    status: 'error',
+    message: 'Too many requests, please try again later.'
+  });
 } 

@@ -7,6 +7,7 @@ import { businessRoutes } from './routes/businessRoutes';
 import { financialRoutes } from './routes/financialRoutes';
 import { analyticsRoutes } from './routes/analyticsRoutes';
 import { adviceRoutes } from './routes/adviceRoutes';
+import { authRoutes } from './routes/authRoutes';
 
 const app = express();
 
@@ -32,6 +33,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/businesses', businessRoutes);
 app.use('/api/financials', financialRoutes);
 app.use('/api/analytics', analyticsRoutes);
