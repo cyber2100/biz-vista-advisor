@@ -12,11 +12,16 @@ export interface SignupCredentials extends LoginCredentials {
 }
 
 export interface AuthResponse {
-  token: string;
+  message: string;
+  session: {
+    access_token: string;
+  };
   user: {
     id: string;
-    name: string;
     email: string;
+    user_metadata: {
+      name: string;
+    };
   };
 }
 
@@ -26,8 +31,8 @@ class AuthService {
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, credentials);
-      this.setToken(response.data.token);
+      const response = await axios.post(`${API_URL}/auth/signin`, credentials);
+      this.setToken(response.data.session.access_token);
       this.setUser(response.data.user);
       return response.data;
     } catch (error) {
