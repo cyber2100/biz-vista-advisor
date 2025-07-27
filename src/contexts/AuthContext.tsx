@@ -29,21 +29,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
-    try {
-      const response = await authService.login(credentials);
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
+    const response = await authService.login(credentials);
+    setUser(response.user);
   };
 
   const signup = async (credentials: SignupCredentials) => {
-    try {
-      const response = await authService.signup(credentials);
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
+    const response = await authService.signup(credentials);
+    setUser(response.user);
   };
 
   const logout = () => {

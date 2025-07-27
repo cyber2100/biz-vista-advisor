@@ -13,7 +13,9 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:8080', // Allow only Vite dev server
+}));
 app.use(express.json());
 
 // Rate limiting
